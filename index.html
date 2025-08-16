@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ders Takip</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <button id="backBtn" class="back hidden" aria-label="Geri">←</button>
+    <h1 id="titleText">Ders & Mola Takip</h1>
+    <div class="right"><div class="clock" id="liveClock">--:--:--</div></div>
+  </header>
+
+  <main class="app">
+    <!-- ANA -->
+    <section id="viewHome" class="view active">
+      <div class="home-grid">
+        <button class="round-card" id="navPomodoro" aria-label="Pomodoro">
+          <div class="round-icon gradient-green">⏱️</div>
+          <div class="round-title">Pomodoro</div>
+        </button>
+        <button class="round-card" id="navStats" aria-label="İstatistikler">
+          <div class="round-icon gradient-blue">📊</div>
+          <div class="round-title">İstatistikler</div>
+        </button>
+      </div>
+    </section>
+
+    <!-- POMODORO -->
+    <section id="viewPomodoro" class="view">
+      <section class="settings card">
+        <div class="row">
+          <label for="studyMin">Ders Süresi:</label>
+          <input type="number" id="studyMin" value="50" min="0" /> dk
+          <input type="number" id="studySec" value="0" min="0" max="59" /> sn
+        </div>
+        <div class="row">
+          <label for="breakMin">Kısa Mola:</label>
+          <input type="number" id="breakMin" value="10" min="0" /> dk
+          <input type="number" id="breakSec" value="0" min="0" max="59" /> sn
+        </div>
+        <div class="row">
+          <label for="longBreakMin">Uzun Mola:</label>
+          <input type="number" id="longBreakMin" value="60" min="0" /> dk
+          <input type="number" id="longBreakSec" value="0" min="0" max="59" /> sn
+        </div>
+        <div class="row">
+          <label for="roundsCount">Her Set İçin Tur:</label>
+          <input type="number" id="roundsCount" value="4" min="1" />
+        </div>
+        <div class="row">
+          <label for="setsCount">Set Sayısı:</label>
+          <input type="number" id="setsCount" value="3" min="1" />
+        </div>
+        <div class="row">
+          <label class="sound-toggle">
+            <input type="checkbox" id="soundToggle" checked /> Ses (tik-tak)
+          </label>
+        </div>
+        <div class="row">
+          <label class="sound-toggle">
+            <input type="checkbox" id="alarmToggle" checked /> Bitişte Zil
+          </label>
+        </div>
+        <button id="saveSettings">Kaydet</button>
+      </section>
+
+      <section class="timer card">
+        <h2 id="status">Hazır</h2>
+        <div class="roundInfo">
+          Set: <span id="setLabel">0 / 3</span> — Tur: <span id="roundLabel">0 / 4</span>
+        </div>
+        <div class="hourglass" id="hourglass" aria-hidden="true">
+          <div class="sand top"></div><div class="sand bottom"></div><div class="neck"></div>
+        </div>
+        <div id="timeDisplay" class="time">00:00</div>
+        <div class="controls">
+          <button id="startBtn" class="btn start">Başla</button>
+          <button id="pauseBtn" class="btn pause">Duraklat</button>
+          <button id="resetBtn" class="btn reset">Sıfırla</button>
+          <button id="stopSoundBtn" class="btn mute hidden">Sesi Durdur</button>
+          <button id="skipBreakBtn" class="btn skip hidden">Molayı Atla</button>
+        </div>
+      </section>
+    </section>
+
+    <!-- İSTATİSTİKLER -->
+    <section id="viewStats" class="view">
+      <section class="stats card">
+        <h3>İstatistikler</h3>
+
+        <!-- metrik & dönem -->
+        <div class="stats-controls">
+          <div class="seg">
+            <button class="seg-btn active" data-metric="time" id="metricTime">Süre</button>
+            <button class="seg-btn" data-metric="questions" id="metricQuestions">Soru</button>
+          </div>
+          <div class="seg">
+            <button class="seg-btn active" data-range="week" id="rangeWeek">Haftalık</button>
+            <button class="seg-btn" data-range="month" id="rangeMonth">Aylık</button>
+            <button class="seg-btn" data-range="year" id="rangeYear">Yıllık</button>
+          </div>
+        </div>
+
+        <!-- grafik -->
+        <canvas id="statsChart" height="200"></canvas>
+
+        <!-- açıklamalı liste -->
+        <div class="list-wrap">
+          <h4 id="listTitle">Haftalık Çalışma</h4>
+          <ul id="statsList" class="stats-list"></ul>
+        </div>
+
+        <!-- toplam göstergeler (eski) -->
+        <div class="totals old-totals">
+          <p>Bugün Çalışma: <span id="todayTotal">0</span> dk</p>
+          <p>Haftalık Çalışma: <span id="weekTotal">0</span> dk</p>
+        </div>
+
+        <!-- Soru kaydı -->
+        <div class="question-form">
+          <h4>Soru Kaydı</h4>
+          <div class="row">
+            <label for="qDate">Tarih:</label>
+            <input type="date" id="qDate" />
+          </div>
+          <div class="row">
+            <label for="qCount">Soru:</label>
+            <input type="number" id="qCount" min="0" placeholder="örn. 50" />
+          </div>
+          <button id="qSaveBtn" class="btn start">Kaydet</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+  <footer class="footnote">PREPARED BY ABDULRAKİP ELHAZNEVİ – İYİ ÇALIŞMALAR</footer>
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
