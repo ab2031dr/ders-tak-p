@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ders & Mola Takip</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Grafikler -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <button id="backBtn" class="back hidden" aria-label="Geri">←</button>
+    <h1 id="titleText">Ders & Mola Takip</h1>
+    <div class="right">
+      <div class="clock" id="liveClock">--:--:--</div>
+      <div id="userBadge" class="user-badge hidden">
+        <span id="userNameLabel"></span>
+        <button id="logoutBtn" class="btn small">Çıkış</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app">
+    <!-- =============== AUTH (Firebase) =============== -->
+    <section id="viewAuth" class="view active">
+      <section class="card auth-card">
+        <div class="seg auth-tabs">
+          <button id="tabLogin" class="seg-btn active">Giriş</button>
+          <button id="tabRegister" class="seg-btn">Kayıt Ol</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="loginPane" class="auth-pane">
+          <div class="row">
+            <label for="loginUser">E-posta</label>
+            <input type="email" id="loginUser" autocomplete="username" />
+          </div>
+          <div class="row">
+            <label for="loginPass">Şifre</label>
+            <input type="password" id="loginPass" autocomplete="current-password" />
+          </div>
+          <button id="loginBtn" class="btn start full">Giriş Yap</button>
+          <p class="muted small">Hesabınla giriş yap; verilerin bulutta senkronlanır.</p>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="registerPane" class="auth-pane hidden">
+          <div class="row">
+            <label for="regUser">E-posta</label>
+            <input type="email" id="regUser" autocomplete="username" />
+          </div>
+          <div class="row">
+            <label for="regPass">Şifre</label>
+            <input type="password" id="regPass" autocomplete="new-password" />
+          </div>
+          <div class="row">
+            <label for="regPass2">Şifre (tekrar)</label>
+            <input type="password" id="regPass2" autocomplete="new-password" />
+          </div>
+          <button id="registerBtn" class="btn start full">Kayıt Ol</button>
+          <p class="muted small">Şifren Firebase Authentication ile güvenle saklanır.</p>
+        </div>
+      </section>
+    </section>
+
+    <!-- =============== ANA MENÜ =============== -->
+    <section id="viewHome" class="view">
+      <div class="home-grid">
+        <button class="round-card" id="navPomodoro" aria-label="Pomodoro">
+          <div class="round-icon gradient-green">⏱️</div>
+          <div class="round-title">Pomodoro</div>
+        </button>
+
+        <button class="round-card" id="navStats" aria-label="İstatistikler">
+          <div class="round-icon gradient-blue">📊</div>
+          <div class="round-title">İstatistikler</div>
+        </button>
+
+        <button class="round-card" id="navQuickAdd" aria-label="Ekle">
+          <div class="round-icon gradient-purple">➕</div>
+          <div class="round-title">Ekle</div>
+        </button>
+
+        <button class="round-card" id="navRanking" aria-label="Sıralama">
+          <div class="round-icon gradient-orange">🏆</div>
+          <div class="round-title">Sıralama</div>
+        </button>
+
+        <button class="round-card" id="navSettings" aria-label="Ayarlar">
+          <div class="round-icon gradient-gray">⚙️</div>
+          <div class="round-title">Ayarlar</div>
+        </button>
+      </div>
+    </section>
+
+    <!-- =============== POMODORO =============== -->
+    <section id="viewPomodoro" class="view">
+      <section class="settings card">
+        <div class="row">
+          <label for="studyMin">Ders Süresi:</label>
+          <input type="number" id="studyMin" value="50" min="0" /> dk
+          <input type="number" id="studySec" value="0" min="0" max="59" /> sn
+        </div>
+        <div class="row">
+          <label for="breakMin">Kısa Mola:</label>
+          <input type="number" id="breakMin" value="10" min="0" /> dk
+          <input type="number" id="breakSec" value="0" min="0" max="59" /> sn
+        </div>
+        <div class="row">
+          <label for="longBreakMin">Uzun Mola:</label>
+          <input type="number" id="longBreakMin" value="60" min="0" /> dk
+          <input type="number" id="longBreakSec" value="0" min="0" max="59" /> sn
+        </div>
+        <div class="row">
+          <label for="roundsCount">Her Set İçin Tur:</label>
+          <input type="number" id="roundsCount" value="4" min="1" />
+        </div>
+        <div class="row">
+          <label for="setsCount">Set Sayısı:</label>
+          <input type="number" id="setsCount" value="3" min="1" />
+        </div>
+        <div class="row">
+          <label class="sound-toggle"><input type="checkbox" id="soundToggle" checked /> Ses (tik-tak)</label>
+        </div>
+        <div class="row">
+          <label class="sound-toggle"><input type="checkbox" id="alarmToggle" checked /> Bitişte Zil</label>
+        </div>
+        <button id="saveSettings">Kaydet</button>
+      </section>
+
+      <section class="timer card">
+        <h2 id="status">Hazır</h2>
+        <div class="roundInfo">Set: <span id="setLabel">0 / 3</span> — Tur: <span id="roundLabel">0 / 4</span></div>
+
+        <!-- GERÇEKÇİ KUM SAATİ (Canvas) -->
+        <div class="hourglass" id="hourglass" aria-hidden="true">
+          <canvas id="hgCanvas" width="170" height="240"></canvas>
+        </div>
+
+        <div id="timeDisplay" class="time">00:00</div>
+        <div class="controls">
+          <button id="startBtn" class="btn start">Başla</button>
+          <button id="pauseBtn" class="btn pause">Duraklat</button>
+          <button id="resetBtn" class="btn reset">Sıfırla</button>
+          <button id="stopSoundBtn" class="btn mute hidden">Sesi Durdur</button>
+          <button id="skipBreakBtn" class="btn skip hidden">Molayı Atla</button>
+        </div>
+      </section>
+    </section>
+
+    <!-- =============== İSTATİSTİKLER =============== -->
+    <section id="viewStats" class="view">
+      <section class="stats card">
+        <h3>İstatistikler</h3>
+
+        <div class="stats-controls">
+          <div class="seg">
+            <button class="seg-btn active" data-metric="time" id="metricTime">Süre</button>
+            <button class="seg-btn" data-metric="questions" id="metricQuestions">Soru</button>
+          </div>
+          <div class="seg">
+            <button class="seg-btn active" data-range="week" id="rangeWeek">Haftalık</button>
+            <button class="seg-btn" data-range="month" id="rangeMonth">Aylık</button>
+            <button class="seg-btn" data-range="year" id="rangeYear">Yıllık</button>
+          </div>
+        </div>
+
+        <canvas id="statsChart" height="200"></canvas>
+
+        <div class="list-wrap">
+          <h4 id="listTitle">Haftalık Çalışma</h4>
+          <ul id="statsList" class="stats-list"></ul>
+        </div>
+
+        <div class="totals old-totals">
+          <p>Bugün Çalışma: <span id="todayTotal">0</span> dk</p>
+          <p>Haftalık Çalışma: <span id="weekTotal">0</span> dk</p>
+        </div>
+
+        <!-- Soru kaydı + düzenleme -->
+        <div class="question-form" id="questionForm">
+          <h4>Soru Kaydı</h4>
+          <div class="row">
+            <label for="qDate">Tarih:</label>
+            <input type="date" id="qDate" />
+          </div>
+          <div class="row">
+            <label for="qSubject">Ders:</label>
+            <select id="qSubject"></select>
+          </div>
+          <div class="row">
+            <label for="qCount">Soru:</label>
+            <input type="number" id="qCount" min="0" placeholder="örn. 50" />
+          </div>
+          <button id="qSaveBtn" class="btn start">Kaydet</button>
+
+          <div class="q-list-wrap">
+            <h4>Seçilen Tarihteki Soru Kayıtları</h4>
+            <ul id="qEntryList" class="stats-list compact"></ul>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- =============== SIRALAMA (placeholder) =============== -->
+    <section id="viewSort" class="view">
+      <section class="card"><h3>🏆 Sıralama</h3><p>Yakında…</p></section>
+    </section>
+
+    <!-- =============== AYARLAR / TEMA =============== -->
+    <section id="viewPrefs" class="view">
+      <section class="card">
+        <h3>⚙️ Ayarlar & Tema</h3>
+        <div class="row">
+          <label for="themeSelect">Tema:</label>
+          <select id="themeSelect">
+            <option value="dark">Karanlık</option>
+            <option value="light">Aydınlık</option>
+            <option value="forest">Orman</option>
+            <option value="ocean">Okyanus</option>
+            <option value="sunset">Günbatımı</option>
+            <option value="neon">Neon</option>
+            <option value="custom">Özel Arkaplan</option>
+          </select>
+          <button id="applyThemeBtn" class="btn start">Uygula</button>
+        </div>
+        <div class="row" id="customBgRow" style="display:none">
+          <label for="bgUpload">Arkaplan resmi (JPG/PNG):</label>
+          <input type="file" id="bgUpload" accept="image/*" />
+          <small class="muted">Resim local olarak saklanır (PDF desteklenmez).</small>
+        </div>
+        <div class="row">
+          <img id="themePreview" alt="Önizleme" style="max-width:260px;border-radius:12px;display:none;border:1px solid rgba(255,255,255,.08)"/>
+        </div>
+        <p class="muted small">
+          Not: İstersen <code>themes/</code> klasörü oluşturup görsellerini
+          <code>forest.jpg</code>, <code>ocean.jpg</code>, <code>sunset.jpg</code> gibi isimlerle koyabilirsin.
+          Script bu isimleri otomatik kullanacak.
+        </p>
+      </section>
+    </section>
+  </main>
+
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+  <footer class="footnote">PREPARED BY ABDULRAKIB ELHAZNEVİ – İYİ ÇALIŞMALAR</footer>
+
+  <!-- Firebase (compat / global) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCSfypLfBdl1Nx4-Bf1NATidgdJ5vFKPOA",
+      authDomain: "ders-uygulamasi-e6faf.firebaseapp.com",
+      projectId: "ders-uygulamasi-e6faf",
+      storageBucket: "ders-uygulamasi-e6faf.firebasestorage.app",
+      messagingSenderId: "314675748985",
+      appId: "1:314675748985:web:17cf2013986cd7573bf4a8",
+      measurementId: "G-CDVM65CF70"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <!-- Bulut katmanı ve uygulama -->
+  <script src="firebase-init.js"></script>
+  <script defer src="script.js"></script>
+</body>
+</html>
